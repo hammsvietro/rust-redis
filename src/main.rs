@@ -15,7 +15,7 @@ struct Ip(String);
 #[derive(Serialize, Deserialize)]
 struct ProcessResponse {
     result: String,
-    duration: Duration
+    duration: u64
 }
 
 
@@ -69,7 +69,7 @@ fn index(ip: Ip) -> rocket_contrib::json::Json<ProcessResponse>  {
                 proc
             }
         },
-        duration: start.elapsed()
+        duration: start.elapsed().as_secs()
     };
 
     rocket_contrib::json::Json(response)
