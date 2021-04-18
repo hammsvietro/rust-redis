@@ -4,7 +4,7 @@
 
 extern crate redis;
 
-use std::{thread, time::{Duration, Instant}};
+use std::{thread, time::Instant};
 
 use redis::{Commands, Connection};
 use rocket::{Outcome, Request, request::{self, FromRequest}};
@@ -33,16 +33,16 @@ impl<'a, 'r> FromRequest<'a, 'r> for Ip {
 }
 
 fn get_connection() -> redis::Connection {
-    let client = redis::Client::open("redis://127.0.0.1/").unwrap();
+    let client = redis::Client::open("redis://redis/").unwrap();
     client.get_connection().unwrap()
 }
 
-fn clear_redis(connection: &mut Connection) {
-    redis::cmd("FLUSHALL").query::<()>(connection).unwrap();
+fn clear_redis(connection: &mut Connection, ip: Ip) {
+    let _: () = connection.del(ip.0).unwrap();
 }
 
 fn set_value_for_ip(connection: &mut Connection, ip: Ip, value: String) {
-    let _: () = connection.set(ip.0, value).unwrap();
+    let _: () = connection.set_ex(ip.0, value, 60).unwrap();
 }
 
 fn process() -> String {
@@ -76,15 +76,15 @@ fn index(ip: Ip) -> rocket_contrib::json::Json<ProcessResponse>  {
 }
 
 #[get("/clear")]
-fn clear() -> rocket::http::Status {
+fn clear(ip: Ip) -> rocket::http::Status {
     let mut connection = get_connection();
-    clear_redis(&mut connection);
+    clear_redis(&mut connection, ip.clone());
     rocket::http::Status::Accepted
 }
 
 fn main() {
     // open redis connection
-    redis::Client::open("redis://127.0.0.1/").unwrap();
+    redis::Client::open("redis://redis/").unwrap();
     // listen
     rocket::ignite().mount("/", routes![index, clear]).launch();
 }

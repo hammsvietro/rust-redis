@@ -1,5 +1,3 @@
-[development]
-address = "localhost"
+[global]
+address = "0.0.0.0"
 port = 3000
-log = "normal"
-limits = { forms = 32768 }
